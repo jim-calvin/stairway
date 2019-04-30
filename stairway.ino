@@ -34,7 +34,7 @@ const uint16_t topIndicatorLED = LEDCount-1;  // LED address to use for top PIR 
 #define failedTimeout 4     // one PIR tripped, other never did
 
 bool debug = false;         // set to true to get lots of debug printouts
-bool debugPattern = false;   // set to true when testing a pattern - ignores startup checks that PIRs are LOW
+bool debugPattern = false;  // set to true when testing a pattern - ignores startup checks that PIRs are LOW
 
 /************************************************************************************
  * light levels to used to decide which color to light the stairs
@@ -144,7 +144,7 @@ uint32_t randomColor() {
  * pick an appropriate color based on mode and ambient light conditions
  ************************************************************************************/
 uint32_t chooseColor(bool fading=false) {
-    uint32_t theColor = randomColor();      // get a random color
+  uint32_t theColor = randomColor();        // get a random color
   if (fading) {                             // fading, just use that color
     if (debug) { Serial.print("cc: random color: "); Serial.println(theColor); }
     return theColor;
@@ -410,7 +410,7 @@ bool twinkleContinue() {
     twinkleFinish();
     return twinkleRunning;
   }
-  int tryIdx = random(firstLEDToUse, LEDCount); // try a random LED
+  int tryIdx = random(firstLEDToUse, lastLEDToUse); // try a random LED
   if (LEDArray[tryIdx] == twinkleOnState) {    // already transitioned?
     int origTryIdx = tryIdx;            // then search for next non transitioned LED
     do {
@@ -617,7 +617,7 @@ bool colorSwirlContinue() {
     colorSwirlIndex = 1;
     colorSwirlInc = -colorSwirlInc;
   }
-  for (int i=firstLEDToUse; i<lastLEDToUse; i++) {
+  for (int i=firstLEDToUse; i<=lastLEDToUse; i++) {
     int rc_index = (i * 256 / LEDCount-2) + colorSwirlIndex;
     strip.setPixelColor(i, wheel(rc_index & 255));
   }
@@ -1090,6 +1090,7 @@ void loop() {
       }
     break;
   }
+
 debugPatternLabel:
   blinkActive(now);       // indicate that we're cycling
   continueLighting();

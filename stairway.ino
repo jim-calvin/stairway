@@ -1,3 +1,8 @@
+/************************************************************************************
+ * Original code for the project. See the Arduino or Python directories for more
+ * recent versions of the software.
+ ************************************************************************************/
+
 #include <Adafruit_NeoPixel.h>
 #include <Adafruit_DotStar.h>
 

@@ -6,11 +6,22 @@
  * @section intro_sec Introduction
  * 
  * This file contains the startup() and loop() functions for the stairway 
- * lighting project (as well as a bunch of other items)
+ * lighting project (as well as some support functions - lightlevel,
+ * state machine & associated functions, color and animation selection
+ * functions)
  * 
  * @section author Author
  * 
  * Written by Jim Calvin.
+ * 
+ * @section dependencies Dependencies
+ * 
+ * This file depends on multiple Adafruit library and board definitions
+ * 
+ * This project also requires the following files:
+ * Animation.cpp/.h, AnimationGlobals.h, ColorSwirl.cpp/.h,
+ * FadeAndWipe.cpp/.h, PIR.cpp/.h, Twinkle.cpp/.h,
+ * ZipLine.cpp/.h
  * 
  * @section license License
  * 
@@ -36,7 +47,7 @@
 #include "Twinkle.h"
 #include "ZipLine.h"
 #include "ColorSwirl.h"
-#include "AnimationGlobals.h"
+#include "AnimationGlobals.h"         // defines # of LEDs in the string (among other things)
 
 bool debug = false;                   // set true for debugging output on Serial monitor
 bool debugPattern = false;            // set true when debugging animations, eliminates wait for PIRs==LOW
@@ -66,7 +77,7 @@ int lightLevelDim = klightLevelDim;   // below this, a dimish red
 int lightLevelTwinkleThreshold = klightLevelTwinkleThreshold;  // separator between twinkle mode & fade mode
 
 #define minimumOnTime 10              // amount of time (seconds) LEDs stay on after 2nd PIR is triggered
-#define timeBetweenPIRTriggers 12     // time out period when waiting for 2nd PIR to trip
+#define timeBetweenPIRTriggers 9      // time out period (seconds) when waiting for 2nd PIR to trip
 
 /************************************************************************************
  * lots of LEDs to light stairs.
@@ -182,6 +193,7 @@ SystemState currentState = idleState;
 ColorWipe colorWipe = ColorWipe("ColorWipe", 1.3);
 ZipLine zipLine = ZipLine("ZipLine", 2.0);
 ColorSwirl colorSwirl = ColorSwirl("Rainbow", -15);
+SingleSwirl singleSwirl = SingleSwirl("Fading colors", -15);
 Marquee marquee = Marquee("Marquee", -150);
 FadeToColor fadeToColor = FadeToColor("Fade to color", 1.3);
 ZipLineInverse zipLineInverse = ZipLineInverse("ZipLine Inverse", 2.0);
@@ -206,8 +218,9 @@ Animation * nonFadeBrighterAnimations[nonFadeBrighterAnimationCount] = {
 };
 
 // animations to use when mode switch is HIGH
-#define fadeHighAnimationCount 8  // number used in HI mode
+#define fadeHighAnimationCount 9  // number used in HI mode
 Animation * fadeHighAnimations[fadeHighAnimationCount] = {
+  &singleSwirl,
   &twinkle,
   &colorSwirl,
   &marquee,
@@ -216,7 +229,7 @@ Animation * fadeHighAnimations[fadeHighAnimationCount] = {
   &zipLineInverse,
   &colorWipe,
   &zip2i
-};
+ };
 
 // currently active animation - initialize to something
 Animation *currentAnimation = fadeHighAnimations[fadeHighAnimationCount-1];
@@ -472,7 +485,7 @@ void noSecondSensor(bool fromTop, int iRed, int iGreen, int iBlue) {
 }
 
 /************************************************************************************
- * state machine execution - uses Trinket M0 dotstar display current state
+ * state machine execution - uses Trinket M0 dotstar to display current state
  * 
  * DotStar color indicators for debugging
  * RED - top PIR tripped
@@ -499,7 +512,7 @@ void executeStateMachine(bool top, bool bottom, uint32_t now) {
         if (debug) { Serial.println("-> waitingTimeout top"); }
         secondSensorTripped(now, 0, 0, 128);
       } else {                            // lower PIR not triggered yet; timeout yet?
-        if (((now - onTime)/1000 >= timeBetweenPIRTriggers) || !top) {  // maybe comment out "|| !top"
+        if (((now - onTime)/1000 >= timeBetweenPIRTriggers) /*|| !top*/) {  // maybe comment out "|| !top"
                                                                         // which forces lights to stay on for time
                                                                         // period rather than when the PIR goes LOW
           if (debug) { Serial.println("-> idle - no bottom trigger"); }
@@ -512,7 +525,7 @@ void executeStateMachine(bool top, bool bottom, uint32_t now) {
         if (debug) { Serial.println("-> waitingTimeout bottom"); }
         secondSensorTripped(now, 128, 0, 128);
       } else {                            // upper hasn't tripped yet, timeout yet?
-        if (((now - onTime)/1000 >= timeBetweenPIRTriggers) || !bottom) { // maybe comment out "|| !bottom"
+        if (((now - onTime)/1000 >= timeBetweenPIRTriggers) /*|| !bottom*/) { // maybe comment out "|| !bottom"
                                                                           // which forces lights to stay on for time
                                                                           // period rather than when the PIR goes LOW
           if (debug) { Serial.println("-> idle - no top trigger"); }

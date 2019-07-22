@@ -51,11 +51,24 @@ class ColorSwirl : public Animation {
     void Finish(bool topToBottom);
     bool Active();
     void printSelf();
-  private:
+  protected:
     int _swirlIdx;
     int _swirlInc;
 
     uint32_t wheel(int pos);
+};
+
+/************************************************************************************
+ * All LEDs one color, but cycle through the rainbow
+ ************************************************************************************/
+class SingleSwirl : public ColorSwirl {
+  public:
+    SingleSwirl(const char * animationName, float animationTime, int firstOffset=1, int lastOffset=-1);
+    void Start(bool topToBottom, uint32_t colorToUse);
+    void Continue();
+    void Finish(bool topToBottom);
+    bool Active();
+    void printSelf();
 };
 
 /************************************************************************************

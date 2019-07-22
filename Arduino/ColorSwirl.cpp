@@ -114,6 +114,57 @@ void ColorSwirl::printSelf() {
 }
 
 /************************************************************************************
+ * All LEDs one color but cycle through the rainbow for the color
+ ************************************************************************************/
+SingleSwirl::SingleSwirl(const char * animationName, float animationTime, int firstOffset, int lastOffset):ColorSwirl(animationName, animationTime, firstOffset, lastOffset) {
+}
+
+
+// start up the animation
+void SingleSwirl::Start(bool topToBottom, uint32_t colorToUse) {
+  _topToBottom = topToBottom;                 // not used, compiler happiness
+  _colorToUse = colorToUse;                   // ditto
+  _active = true;
+  _swirlIdx = 0;
+  _swirlInc = 1;
+  pixels.setBrightness(255);
+  setAllPixelsTo(_swirlIdx);
+  pixels.show();
+  _lastUpdateTime = millis();
+}
+
+// keep the animation going until completed
+void SingleSwirl::Continue() {
+  if (!_active) {                           // nothing to do here if we're not active
+    return;
+  }
+  unsigned long now = millis();
+  int elapsed = (now - _lastUpdateTime);
+  if (elapsed < _animationStepIncrement) {  // appropriate time elapsed?
+    return;                                 // not yet
+  }
+  _swirlIdx += _swirlInc;
+  if (_swirlIdx > 255) {
+    _swirlIdx = 254;
+    _swirlInc = -_swirlInc;
+  }
+  int rc_index = _swirlIdx;
+  setAllPixelsTo(wheel(rc_index & 255));
+  _lastUpdateTime = now;                  // "schedule" next update
+}
+
+// start the shutdown of the animation; in this case it's just running it again but with color=black
+void SingleSwirl::Finish(bool topToBottom) {
+  _topToBottom = topToBottom;               // unused, compiler bliss
+  setAllPixelsTo(offColor);
+  _active = false;
+}
+
+void SingleSwirl::printSelf() {
+  Serial.print("Single swirl "); Serial.println(_animationStepIncrement);
+}
+
+/************************************************************************************
  * Walk lights like old-time marquee lights
  * Setting marqueeQuanta will override the number of ON LEDs between the OFF LEDs
  ************************************************************************************/
